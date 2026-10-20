@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <vector>
 
 int main() {
   // Flush after every std::cout / std:cerr
@@ -14,7 +16,22 @@ int main() {
     if(input == "exit"){
       return 0;
     }
-    std::cout << input << ": command not found" << std::endl;
+    std::stringstream stream(input);
+    std::vector<std::string> words;
+    std::string word;
+
+    while(stream >> word){
+      words.push_back(word);
+    }
+    if(words[0] == "echo"){
+      std::string joined;
+      for (int i = 1; i < words.size(); i++) {
+          if (!joined.empty()) joined += ' ';
+          joined += words[i];
+      }
+      std::cout << joined << std:: endl;
+    }
+    //std::cout << input << ": command not found" << std::endl;
   }
   return 0;
 }
