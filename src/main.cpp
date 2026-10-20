@@ -31,7 +31,7 @@ int main() {
       }
       std::cout << joined << std:: endl;
     }
-    //std::cout << input << ": command not found" << std::endl;
+    std::cout << input << ": command not found" << std::endl;
   }
   return 0;
 }
