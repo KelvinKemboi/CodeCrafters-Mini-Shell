@@ -30,8 +30,9 @@ int main() {
           joined += words[i];
       }
       std::cout << joined << std:: endl;
+    }else{
+      std::cout << input << ": command not found" << std::endl;
     }
-    std::cout << input << ": command not found" << std::endl;
   }
   return 0;
 }
