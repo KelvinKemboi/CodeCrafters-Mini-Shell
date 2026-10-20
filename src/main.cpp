@@ -2,6 +2,9 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <filesystem>
+#include <cstdlib>
+#include <unistd.h>
 
 int main() {
   // Flush after every std::cout / std:cerr
@@ -19,10 +22,10 @@ int main() {
     std::stringstream stream(input);
     std::vector<std::string> words;
     std::string word;
-
     while(stream >> word){
       words.push_back(word);
     }
+    
     if(words[0] == "echo"){
       std::string joined;
       for (int i = 1; i < words.size(); i++) {
@@ -30,11 +33,36 @@ int main() {
           joined += words[i];
       }
       std::cout << joined << std:: endl;
-    }else if(words[0] == "type"){
-      if (words[1] == "exit" || words[1] == "echo" || words[1] == "type"){
-        std::cout << words[1] << " is a shell builtin" << std::endl;
-      }else{
-        std::cout << words[1] << ": not found" << std::endl;
+    }else if (words[0] == "type") {
+      if (words.size() < 2) {
+        std::cout << "type: missing operand" << std::endl;
+      } else {
+        const std::string& command = words[1];
+
+        if (command == "exit" || command == "echo" || command == "type") {
+          std::cout << command << " is a shell builtin" << std::endl;
+        } else {
+          bool found = false;
+          const char* pathEnv = std::getenv("PATH");
+
+          if (pathEnv) {
+            std::stringstream paths(pathEnv);
+            std::string directory;
+
+            while (std::getline(paths, directory, ':')) {
+              auto candidate = std::filesystem::path(directory) / command;
+              if (std::filesystem::is_regular_file(candidate) && access(candidate.c_str(), X_OK) == 0) {
+                std::cout << command << " is " << candidate.string() << std::endl;
+                found = true;
+                break;
+              }
+            }
+          }
+
+          if (!found) {
+            std::cout << command << ": not found" << std::endl;
+          }
+        }
       }
     }
     else{
