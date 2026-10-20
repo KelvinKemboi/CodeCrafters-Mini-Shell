@@ -30,7 +30,14 @@ int main() {
           joined += words[i];
       }
       std::cout << joined << std:: endl;
-    }else{
+    }else if(words[0] == "type"){
+      if (words[1] == "exit" || words[1] == "echo" || words[1] == "type"){
+        std::cout << words[1] << " is a shell builtin" << std::endl;
+      }else{
+        std::cout << words[1] << ": not found" << std::endl;
+      }
+    }
+    else{
       std::cout << input << ": command not found" << std::endl;
     }
   }
