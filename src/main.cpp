@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <cstdlib>
 #include <unistd.h>
+#include <sys/wait.h>
 
 int main() {
   // Flush after every std::cout / std:cerr
@@ -43,14 +44,15 @@ int main() {
           std::cout << command << " is a shell builtin" << std::endl;
         } else {
           bool found = false;
-          const char* pathEnv = std::getenv("PATH");
+          const char* pathEnv = std::getenv("PATH"); //get path env
 
           if (pathEnv) {
             std::stringstream paths(pathEnv);
             std::string directory;
-
+            //parsing the path
             while (std::getline(paths, directory, ':')) {
               auto candidate = std::filesystem::path(directory) / command;
+              //check if exists in path and is executable
               if (std::filesystem::is_regular_file(candidate) && access(candidate.c_str(), X_OK) == 0) {
                 std::cout << command << " is " << candidate.string() << std::endl;
                 found = true;
@@ -64,6 +66,40 @@ int main() {
           }
         }
       }
+    }else if(!words.empty()){
+      std::vector<char*> argv;
+      //transfer to char* vector for exec
+      for(std::string &w: words){
+        argv.push_back(w.data());
+      }
+
+      bool found = false;
+      const char* pathEnv = std::getenv("PATH");
+      if (pathEnv) {
+        std::stringstream paths(pathEnv);
+        std::string directory;
+
+        while (std::getline(paths, directory, ':')) {
+          auto candidate = std::filesystem::path(directory) / argv[0];
+          if (std::filesystem::is_regular_file(candidate) && access(candidate.c_str(), X_OK) == 0) {
+            pid_t child = fork();
+            if(child == 0){
+              execvp(argv[0], argv.data());
+              perror("Failed");
+              exit(1);
+            }else{
+              waitpid(child, nullptr, 0);
+            }
+            found = true;
+            break;
+          }
+        }
+      }
+
+      if (!found) {
+        std::cout << argv[0] << ": not found" << std::endl;
+      }
+      
     }
     else{
       std::cout << input << ": command not found" << std::endl;
