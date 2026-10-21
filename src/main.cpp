@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cctype>
 #include <filesystem>
 #include <cstdlib>
 #include <unistd.h>
@@ -18,10 +19,33 @@ int main() {
   while (true){
     std::cout << "$ ";
     std::getline(std::cin, input);
-    std::stringstream stream(input);
     std::vector<std::string> words;
     std::string word;
-    while(stream >> word){
+    char quote = '\0';
+    bool tokenStarted = false;
+    for (char character : input) {
+      if (quote != '\0') {
+        if (character == quote) {
+          quote = '\0';
+        } else {
+          word += character;
+        }
+        tokenStarted = true;
+      } else if (character == '\'' || character == '"') {
+        quote = character;
+        tokenStarted = true;
+      } else if (std::isspace(static_cast<unsigned char>(character))) {
+        if (tokenStarted) {
+          words.push_back(word);
+          word.clear();
+          tokenStarted = false;
+        }
+      } else {
+        word += character;
+        tokenStarted = true;
+      }
+    }
+    if (tokenStarted) {
       words.push_back(word);
     }
     if(words.empty()){
@@ -32,24 +56,9 @@ int main() {
     }
     else if(words[0] == "echo"){
       std::string joined;
-      if (words[1][0] == '\''){
-        int start = 0;
-        while (start < input.length()){
-          if(input[start] == '\''){
-            break;
-          }
-          start+=1;
-        }
-        for(int i=start; i< input.length(); i++){
-          char ch = input[i];
-          joined+=ch;
-        }
-        joined.erase(std::remove(joined.begin(), joined.end(), '\''), joined.end());
-      }else{
-        for (int i = 1; i < words.size(); i++) {
-            if(!joined.empty()) joined += ' ';
-            joined += words[i];
-        }
+      for (int i = 1; i < words.size(); i++) {
+        if (!joined.empty()) joined += ' ';
+        joined += words[i];
       }
       std::cout << joined << std:: endl;
     }else if (words[0] == "type") {
