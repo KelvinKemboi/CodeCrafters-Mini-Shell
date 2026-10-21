@@ -33,13 +33,21 @@ int main() {
     else if(words[0] == "echo"){
       std::string joined;
       if (words[1][0] == '\''){
-        for (int i = 1; i < words.size(); i++) {
-            if(!joined.empty()) joined += ' ';
-            joined += words[i];
+        int start = 0;
+        while (start < input.length()){
+          if(input[start] == '\''){
+            break;
+          }
+          start+=1;
+        }
+        for(int i=start; i< input.length(); i++){
+          char ch = input[i];
+          joined+=ch;
         }
         joined.erase(std::remove(joined.begin(), joined.end(), '\''), joined.end());
       }else{
         for (int i = 1; i < words.size(); i++) {
+            if(!joined.empty()) joined += ' ';
             joined += words[i];
         }
       }
