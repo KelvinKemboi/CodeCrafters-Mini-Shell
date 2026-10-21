@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <algorithm>
 
 int main() {
   // Flush after every std::cout / std:cerr
@@ -31,9 +32,16 @@ int main() {
     }
     else if(words[0] == "echo"){
       std::string joined;
-      for (int i = 1; i < words.size(); i++) {
-          if (!joined.empty()) joined += ' ';
-          joined += words[i];
+      if (words[1][0] == '\''){
+        for (int i = 1; i < words.size(); i++) {
+            if(!joined.empty()) joined += ' ';
+            joined += words[i];
+        }
+        joined.erase(std::remove(joined.begin(), joined.end(), '\''), joined.end());
+      }else{
+        for (int i = 1; i < words.size(); i++) {
+            joined += words[i];
+        }
       }
       std::cout << joined << std:: endl;
     }else if (words[0] == "type") {
