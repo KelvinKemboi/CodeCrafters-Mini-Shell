@@ -69,7 +69,7 @@ int main() {
         }
       }
     }else if(words[0] == "pwd"){
-      std::cout << std::filesystem::current_path() <<'\n';
+      std::cout << std::filesystem::current_path().string() <<'\n';
     }
     else if(!words.empty()){
       std::vector<char*> argv;
