@@ -77,7 +77,7 @@ int main() {
       try{
         std::filesystem::current_path(words[1]);
       }catch(const std::filesystem::filesystem_error& error){
-        std::cerr << "failed" << std::endl;
+        std::cout << "cd: " << words[1] << ": No such file or directory" << std::endl;
       }
       
     }
