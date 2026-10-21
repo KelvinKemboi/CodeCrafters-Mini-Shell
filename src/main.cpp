@@ -74,8 +74,14 @@ int main() {
       if(words.size() < 2){
         std::cout << "cd: missing operand" << std::endl;
       }
+      
       try{
-        std::filesystem::current_path(words[1]);
+        if(words[1] == "~"){
+          const char* home = std::getenv("HOME");
+          std::filesystem::current_path(home);
+        }else{
+          std::filesystem::current_path(words[1]);
+        }
       }catch(const std::filesystem::filesystem_error& error){
         std::cout << "cd: " << words[1] << ": No such file or directory" << std::endl;
       }
