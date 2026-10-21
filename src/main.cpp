@@ -68,7 +68,10 @@ int main() {
           }
         }
       }
-    }else if(!words.empty()){
+    }else if(words[0] == "pwd"){
+      std::cout << std::filesystem::current_path() <<'\n';
+    }
+    else if(!words.empty()){
       std::vector<char*> argv;
       //transfer to char* vector for exec
       for(std::string &w: words){
