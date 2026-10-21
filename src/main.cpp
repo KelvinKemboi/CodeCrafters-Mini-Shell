@@ -70,6 +70,16 @@ int main() {
       }
     }else if(words[0] == "pwd"){
       std::cout << std::filesystem::current_path().string() <<'\n';
+    }else if(words[0] == "cd"){
+      if(words.size() < 2){
+        std::cout << "cd: missing operand" << std::endl;
+      }
+      try{
+        std::filesystem::current_path(words[1]);
+      }catch(const std::filesystem::filesystem_error& error){
+        std::cerr << "failed" << std::endl;
+      }
+      
     }
     else if(!words.empty()){
       std::vector<char*> argv;
