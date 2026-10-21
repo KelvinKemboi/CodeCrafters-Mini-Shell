@@ -73,9 +73,8 @@ int main() {
       //transfer to char* vector for exec
       for(std::string &w: words){
         argv.push_back(w.data());
-        argv.push_back(nullptr);
       }
-
+      argv.push_back(nullptr);
       bool found = false;
       const char* pathEnv = std::getenv("PATH");
       if (pathEnv) {
