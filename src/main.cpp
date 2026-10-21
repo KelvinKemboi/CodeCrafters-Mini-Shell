@@ -42,7 +42,7 @@ int main() {
       } else {
         const std::string& command = words[1];
 
-        if (command == "exit" || command == "echo" || command == "type") {
+        if (command == "exit" || command == "echo" || command == "type" || command == "pwd") {
           std::cout << command << " is a shell builtin" << std::endl;
         } else {
           bool found = false;
