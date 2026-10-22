@@ -25,11 +25,18 @@ int main() {
     bool tokenStarted = false;
     bool escaping = false;
     for (char character : input) {
-      if(escaping){
-        word+=character;
+      if (escaping) {
+        word += character;
         escaping = false;
         tokenStarted = true;
-      }else if(character == '\\'){
+      } else if (quote == '\'') {
+        if (character == '\'') {
+          quote = '\0';
+        } else {
+          word += character;
+        }
+        tokenStarted = true;
+      } else if (character == '\\') {
         escaping = true;
         tokenStarted = true;
       } else if (quote != '\0') {
@@ -42,8 +49,7 @@ int main() {
       } else if (character == '\'' || character == '"') {
         quote = character;
         tokenStarted = true;
-      }
-      else if (std::isspace(static_cast<unsigned char>(character))) {
+      } else if (std::isspace(static_cast<unsigned char>(character))) {
         if (tokenStarted) {
           words.push_back(word);
           word.clear();
