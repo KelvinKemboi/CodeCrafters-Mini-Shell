@@ -23,8 +23,16 @@ int main() {
     std::string word;
     char quote = '\0';
     bool tokenStarted = false;
+    bool escaping = false;
     for (char character : input) {
-      if (quote != '\0') {
+      if(escaping){
+        word+=character;
+        escaping = false;
+        tokenStarted = true;
+      }else if(character == '\\'){
+        escaping = true;
+        tokenStarted = true;
+      } else if (quote != '\0') {
         if (character == quote) {
           quote = '\0';
         } else {
@@ -34,7 +42,8 @@ int main() {
       } else if (character == '\'' || character == '"') {
         quote = character;
         tokenStarted = true;
-      } else if (std::isspace(static_cast<unsigned char>(character))) {
+      }
+      else if (std::isspace(static_cast<unsigned char>(character))) {
         if (tokenStarted) {
           words.push_back(word);
           word.clear();
