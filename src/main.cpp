@@ -150,9 +150,9 @@ int main() {
       close(fileFd);
     }
     int savedStderr2 = -1;
-    if (!err.empty()) {
+    if (!err2.empty()) {
       std::cout.flush();
-      int fileFd = open(err.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644); //allow to write/create/truncate files - permission mode 0644
+      int fileFd = open(err2.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644); //allow to write/create/truncate files - permission mode 0644
       if (fileFd == -1) {
         perror("redirection");
         continue;
