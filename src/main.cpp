@@ -90,7 +90,7 @@ int main() {
     int savedStdout = -1;
     if (!txt.empty()) {
       std::cout.flush();
-      int fileFd = open(txt.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      int fileFd = open(txt.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); //allow to write/create/truncate files - permission mode 0644
       if (fileFd == -1) {
         perror("redirection");
         continue;
@@ -202,6 +202,7 @@ int main() {
     else{
       std::cout << input << ": command not found" << std::endl;
     }
+    //restore stdout back to original - terminal
     if (savedStdout != -1) {
       std::cout.flush();
       dup2(savedStdout, STDOUT_FILENO);
