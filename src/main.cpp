@@ -107,7 +107,7 @@ int main() {
     }
     std::string err2;
     for(int i = 0; i+1 < words.size(); i++){
-      if(words[i] == "2>"){
+      if(words[i] == "2>>"){
         err2 = words[i+1];
         words.erase(words.begin()+i, words.begin()+i+2);
         break;
