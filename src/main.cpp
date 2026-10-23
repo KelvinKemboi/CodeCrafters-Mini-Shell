@@ -8,13 +8,13 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <algorithm>
+#include <fcntl.h>
 
 int main() {
   // Flush after every std::cout / std:cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  // TODO: Uncomment the code below to pass the first stage
   std::string input;
   while (true){
     std::cout << "$ ";
@@ -49,6 +49,13 @@ int main() {
       } else if (character == '\'' || character == '"') {
         quote = character;
         tokenStarted = true;
+      } else if(character == '>'){
+        if (tokenStarted) {
+          words.push_back(word);
+          word.clear();
+          tokenStarted = false;
+        }
+        words.push_back(">");
       } else if (std::isspace(static_cast<unsigned char>(character))) {
         if (tokenStarted) {
           words.push_back(word);
@@ -65,6 +72,27 @@ int main() {
     }
     if(words.empty()){
       continue;
+    }
+    std::string txt;
+    for(int i = 0; i+1 < words.size(); i++){
+      if(words[i] == ">"){
+        txt = words[i+1];
+        words.erase(words.begin()+i, words.begin()+i+2);
+        break;
+      }
+    }
+    int savedStdout = -1;
+    if (!txt.empty()) {
+      std::cout.flush();
+      int fileFd = open(txt.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (fileFd == -1) {
+        perror("redirection");
+        continue;
+      }
+
+      savedStdout = dup(STDOUT_FILENO);
+      dup2(fileFd, STDOUT_FILENO);
+      close(fileFd);
     }
     if(words[0] == "exit"){
       break;
@@ -167,6 +195,11 @@ int main() {
     }
     else{
       std::cout << input << ": command not found" << std::endl;
+    }
+    if (savedStdout != -1) {
+      std::cout.flush();
+      dup2(savedStdout, STDOUT_FILENO);
+      close(savedStdout);
     }
   }
   return 0;
