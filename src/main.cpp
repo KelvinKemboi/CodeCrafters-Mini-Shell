@@ -24,7 +24,8 @@ int main() {
     char quote = '\0';
     bool tokenStarted = false;
     bool escaping = false;
-    for (char character : input) {
+    for (int i = 0; i<input.size();i++) {
+      char character = input[i];
       if (escaping) {
         word += character;
         escaping = false;
@@ -50,21 +51,20 @@ int main() {
         quote = character;
         tokenStarted = true;
       } else if(character == '>'){
+        bool append = i+1 < input.size() && input[i+1] == '>';
+        if (append) ++i;
+        std::string op = append ? ">>" : ">";
         if (tokenStarted) {
-          if (word == "1") {
-            words.push_back("1>");
-          } else if(word == "2"){
-            words.push_back("2>");
-          }else {
+          if (word == "1" || word == "2") {
+            op = word + op; 
+          } else {
             words.push_back(word);
-            words.push_back(">");
           }
           word.clear();
           tokenStarted = false;
-        } else {
-          words.push_back(">");
         }
-      } else if (std::isspace(static_cast<unsigned char>(character))) {
+        words.push_back(op);
+      }else if (std::isspace(static_cast<unsigned char>(character))) {
         if (tokenStarted) {
           words.push_back(word);
           word.clear();
@@ -82,7 +82,6 @@ int main() {
       continue;
     }
     std::string out;
-    std::string err;
     for(int i = 0; i+1 < words.size(); i++){
       if(words[i] == ">" || words[i] == "1>"){
         out = words[i+1];
@@ -90,6 +89,15 @@ int main() {
         break;
       }
     }
+    std::string out2;
+    for(int i = 0; i+1 < words.size(); i++){
+      if(words[i] == ">>" || words[i] == "1>>"){
+        out2 = words[i+1];
+        words.erase(words.begin()+i, words.begin()+i+2);
+        break;
+      }
+    }
+    std::string err;
     for(int i = 0; i+1 < words.size(); i++){
       if(words[i] == "2>"){
         err = words[i+1];
@@ -106,6 +114,18 @@ int main() {
         continue;
       }
       savedStdout = dup(STDOUT_FILENO);
+      dup2(fileFd, STDOUT_FILENO);
+      close(fileFd);
+    }
+    int savedStdout2 = -1;
+    if (!out2.empty()) {
+      std::cout.flush();
+      int fileFd = open(out2.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644); //allow to write/create/append files - permission mode 0644
+      if (fileFd == -1) {
+        perror("redirection");
+        continue;
+      }
+      savedStdout2 = dup(STDOUT_FILENO);
       dup2(fileFd, STDOUT_FILENO);
       close(fileFd);
     }
@@ -228,6 +248,12 @@ int main() {
       std::cout.flush();
       dup2(savedStdout, STDOUT_FILENO);
       close(savedStdout);
+    }
+    //restore append stdout back to original - terminal
+    if (savedStdout2 != -1) {
+      std::cout.flush();
+      dup2(savedStdout2, STDOUT_FILENO);
+      close(savedStdout2);
     }
     //restore stderr back to original
     if(savedStderr != -1){
