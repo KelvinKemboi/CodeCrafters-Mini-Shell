@@ -53,7 +53,9 @@ int main() {
         if (tokenStarted) {
           if (word == "1") {
             words.push_back("1>");
-          } else {
+          } else if(word == "2"){
+            words.push_back("2>");
+          }else {
             words.push_back(word);
             words.push_back(">");
           }
@@ -79,25 +81,44 @@ int main() {
     if(words.empty()){
       continue;
     }
-    std::string txt;
+    std::string out;
+    std::string err;
     for(int i = 0; i+1 < words.size(); i++){
       if(words[i] == ">" || words[i] == "1>"){
-        txt = words[i+1];
+        out = words[i+1];
+        words.erase(words.begin()+i, words.begin()+i+2);
+        break;
+      }
+    }
+    for(int i = 0; i+1 < words.size(); i++){
+      if(words[i] == "2>"){
+        out = words[i+1];
         words.erase(words.begin()+i, words.begin()+i+2);
         break;
       }
     }
     int savedStdout = -1;
-    if (!txt.empty()) {
+    if (!out.empty()) {
       std::cout.flush();
-      int fileFd = open(txt.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); //allow to write/create/truncate files - permission mode 0644
+      int fileFd = open(out.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); //allow to write/create/truncate files - permission mode 0644
       if (fileFd == -1) {
         perror("redirection");
         continue;
       }
-
       savedStdout = dup(STDOUT_FILENO);
       dup2(fileFd, STDOUT_FILENO);
+      close(fileFd);
+    }
+    int savedStderr = -1;
+    if (!err.empty()) {
+      std::cout.flush();
+      int fileFd = open(err.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); //allow to write/create/truncate files - permission mode 0644
+      if (fileFd == -1) {
+        perror("redirection");
+        continue;
+      }
+      savedStderr = dup(STDERR_FILENO);
+      dup2(fileFd, STDERR_FILENO);
       close(fileFd);
     }
     if(words[0] == "exit"){
@@ -207,6 +228,12 @@ int main() {
       std::cout.flush();
       dup2(savedStdout, STDOUT_FILENO);
       close(savedStdout);
+    }
+    //restore stderr back to original
+    if(savedStderr != -1){
+      std::cout.flush();
+      dup2(savedStderr, STDERR_FILENO);
+      close(savedStderr);
     }
   }
   return 0;
