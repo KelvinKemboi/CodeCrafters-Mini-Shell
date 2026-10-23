@@ -92,7 +92,7 @@ int main() {
     }
     for(int i = 0; i+1 < words.size(); i++){
       if(words[i] == "2>"){
-        out = words[i+1];
+        err = words[i+1];
         words.erase(words.begin()+i, words.begin()+i+2);
         break;
       }
