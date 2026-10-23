@@ -51,11 +51,17 @@ int main() {
         tokenStarted = true;
       } else if(character == '>'){
         if (tokenStarted) {
-          words.push_back(word);
+          if (word == "1") {
+            words.push_back("1>");
+          } else {
+            words.push_back(word);
+            words.push_back(">");
+          }
           word.clear();
           tokenStarted = false;
+        } else {
+          words.push_back(">");
         }
-        words.push_back(">");
       } else if (std::isspace(static_cast<unsigned char>(character))) {
         if (tokenStarted) {
           words.push_back(word);
@@ -75,7 +81,7 @@ int main() {
     }
     std::string txt;
     for(int i = 0; i+1 < words.size(); i++){
-      if(words[i] == ">"){
+      if(words[i] == ">" || words[i] == "1>"){
         txt = words[i+1];
         words.erase(words.begin()+i, words.begin()+i+2);
         break;
