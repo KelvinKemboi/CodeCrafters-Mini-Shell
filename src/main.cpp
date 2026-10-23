@@ -105,6 +105,14 @@ int main() {
         break;
       }
     }
+    std::string err2;
+    for(int i = 0; i+1 < words.size(); i++){
+      if(words[i] == "2>"){
+        err2 = words[i+1];
+        words.erase(words.begin()+i, words.begin()+i+2);
+        break;
+      }
+    }
     int savedStdout = -1;
     if (!out.empty()) {
       std::cout.flush();
@@ -138,6 +146,18 @@ int main() {
         continue;
       }
       savedStderr = dup(STDERR_FILENO);
+      dup2(fileFd, STDERR_FILENO);
+      close(fileFd);
+    }
+    int savedStderr2 = -1;
+    if (!err.empty()) {
+      std::cout.flush();
+      int fileFd = open(err.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644); //allow to write/create/truncate files - permission mode 0644
+      if (fileFd == -1) {
+        perror("redirection");
+        continue;
+      }
+      savedStderr2 = dup(STDERR_FILENO);
       dup2(fileFd, STDERR_FILENO);
       close(fileFd);
     }
@@ -260,6 +280,12 @@ int main() {
       std::cout.flush();
       dup2(savedStderr, STDERR_FILENO);
       close(savedStderr);
+    }
+    //restore stderr2 back to original
+    if(savedStderr2 != -1){
+      std::cout.flush();
+      dup2(savedStderr2, STDERR_FILENO);
+      close(savedStderr2);
     }
   }
   return 0;
