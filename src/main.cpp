@@ -13,21 +13,38 @@
 #include <cstring>
 
 char* commandGenerator(const char* text, int state) {
-  static const char* commands[] = {"cd", "echo", "exit", "pwd", "type"};
+  static std::vector<std::string> commands = {"cd", "echo", "exit", "pwd", "type"};
   static int index = 0;
 
   if (state == 0) {
     index = 0;
+    const char* pathEnv = std::getenv("PATH");
+    if (pathEnv != nullptr) {
+      std::stringstream paths(pathEnv);
+      std::string directory;
+      while (std::getline(paths, directory, ':')) {
+        std::error_code error;
+        for (std::filesystem::directory_iterator entry(directory, error), end;
+             !error && entry != end; entry.increment(error)) {
+          std::string command = entry->path().filename().string();
+          if (std::filesystem::is_regular_file(entry->path(), error) &&
+              access(entry->path().c_str(), X_OK) == 0 &&
+              std::find(commands.begin(), commands.end(), command) == commands.end()) {
+            commands.push_back(command);
+          }
+        }
+      }
+    }
   }
 
-  while (index < 5) {
-    const char* command = commands[index++];
-    if (std::strncmp(command, text, std::strlen(text)) == 0) {
-      char* result = static_cast<char*>(std::malloc(std::strlen(command) + 1));
-      if (result != nullptr) {
-        std::strcpy(result, command);
-      }
-      return result;
+  while (index < static_cast<int>(commands.size())) {
+    const std::string& command = commands[index++];
+    if (command.compare(0, std::strlen(text), text) == 0) {
+    char* result = static_cast<char*>(std::malloc(command.size() + 1));
+    if (result != nullptr) {
+      std::strcpy(result, command.c_str());
+    }
+    return result;
     }
   }
 
