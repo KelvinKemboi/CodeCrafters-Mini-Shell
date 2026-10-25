@@ -11,6 +11,9 @@
 #include <fcntl.h>
 #include <readline/readline.h>
 #include <cstring>
+#include <map>
+
+std::map<std::string, std::string> completionCommands;
 
 char* commandGenerator(const char* text, int state) {
   static std::vector<std::string> commands = {"cd", "echo", "exit", "pwd", "type"};
@@ -275,12 +278,18 @@ int main() {
       }
       
     }else if(words[0] == "complete"){
-      if (words.size() < 3){
-        std::cout<< "Complete: missing operand" << std::endl;
+      if (words.size() >= 4 && words[1] == "-C") {
+        completionCommands[words[3]] = words[2]; //store command + script
+      } else if (words.size() >= 3 && words[1] == "-p") {
+        auto completion = completionCommands.find(words[2]);
+        if (completion != completionCommands.end()) { //if in the hashmap, script exists
+          std::cout << "complete -C '" << completion->second << "' " << words[2] << std::endl; //print value found
+        }
+      } else {
+        std::cout << "complete: missing or invalid operand" << std::endl;
       }
-      std::cout << "complete: "<< words[2] << ": no completion specification" <<std::endl;
     }
-    else if(!words.empty()){
+    else if(!words.empty()){ //for non-buitlin commands
       std::vector<char*> argv;
       //transfer to char* vector for exec
       for(std::string &w: words){
