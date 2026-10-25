@@ -9,6 +9,38 @@
 #include <sys/wait.h>
 #include <algorithm>
 #include <fcntl.h>
+#include <readline/readline.h>
+#include <cstring>
+
+char* commandGenerator(const char* text, int state) {
+  static const char* commands[] = {"cd", "echo", "exit", "pwd", "type"};
+  static int index = 0;
+
+  if (state == 0) {
+    index = 0;
+  }
+
+  while (index < 5) {
+    const char* command = commands[index++];
+    if (std::strncmp(command, text, std::strlen(text)) == 0) {
+      char* result = static_cast<char*>(std::malloc(std::strlen(command) + 1));
+      if (result != nullptr) {
+        std::strcpy(result, command);
+      }
+      return result;
+    }
+  }
+
+  return nullptr;
+}
+
+char** shellCompletion(const char* text, int start, int end) {
+  (void)end;
+  if (start != 0) {
+    return nullptr;
+  }
+  return rl_completion_matches(text, commandGenerator);
+}
 
 int main() {
   // Flush after every std::cout / std:cerr
@@ -16,9 +48,12 @@ int main() {
   std::cerr << std::unitbuf;
 
   std::string input;
+  rl_attempted_completion_function = shellCompletion;
   while (true){
-    std::cout << "$ ";
-    std::getline(std::cin, input);
+    char* line = readline("$ ");
+    if(line == nullptr) break;
+    input = line;
+    std::free(line);
     std::vector<std::string> words;
     std::string word;
     char quote = '\0';
