@@ -26,7 +26,8 @@ char* commandGenerator(const char* text, int state) {
         std::error_code error;
         for (std::filesystem::directory_iterator entry(directory, error), end;
              !error && entry != end; entry.increment(error)) {
-          std::string command = entry->path().filename().string();
+          std::string command = entry->path().filename().string(); //get current entry filename
+          //if is a file, executable and not in commands vector
           if (std::filesystem::is_regular_file(entry->path(), error) &&
               access(entry->path().c_str(), X_OK) == 0 &&
               std::find(commands.begin(), commands.end(), command) == commands.end()) {
@@ -229,7 +230,7 @@ int main() {
       } else {
         const std::string& command = words[1];
 
-        if (command == "exit" || command == "echo" || command == "type" || command == "pwd") {
+        if (command == "exit" || command == "echo" || command == "type" || command == "pwd" || command == "complete") {
           std::cout << command << " is a shell builtin" << std::endl;
         } else {
           bool found = false;
