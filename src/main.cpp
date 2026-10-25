@@ -284,6 +284,8 @@ int main() {
         auto completion = completionCommands.find(words[2]);
         if (completion != completionCommands.end()) { //if in the hashmap, script exists
           std::cout << "complete -C '" << completion->second << "' " << words[2] << std::endl; //print value found
+        }else{
+          std::cout << "complete: " << words[2] << ": no completion specification" << std::endl;
         }
       } else {
         std::cout << "complete: missing or invalid operand" << std::endl;
