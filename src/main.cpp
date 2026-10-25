@@ -278,7 +278,7 @@ int main() {
       if (words.size() < 3){
         std::cout<< "Complete: missing operand" << std::endl;
       }
-      std::cout << "complete: "<< words[2] << " : no completion specification" <<std::endl;
+      std::cout << "complete: "<< words[2] << ": no completion specification" <<std::endl;
     }
     else if(!words.empty()){
       std::vector<char*> argv;
