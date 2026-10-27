@@ -14,6 +14,62 @@
 #include <map>
 
 std::map<std::string, std::string> completionCommands;
+std::vector<std::string> scriptMatches;
+std::size_t scriptMatchIndex = 0;
+
+std::vector<std::string> runCompleter(const std::string& script) { 
+  std::vector<std::string> matches;
+  int outputPipe[2];
+  if (pipe(outputPipe) == -1) return matches;
+
+  pid_t child = fork();
+  if (child == -1) {
+    close(outputPipe[0]);
+    close(outputPipe[1]);
+    return matches;
+  }
+  if (child == 0) {
+    close(outputPipe[0]);
+    dup2(outputPipe[1], STDOUT_FILENO);
+    close(outputPipe[1]);
+    std::string point = std::to_string(rl_point);
+    setenv("COMP_LINE", rl_line_buffer ? rl_line_buffer : "", 1); //set to full command line typed
+    setenv("COMP_POINT", point.c_str(), 1); //set env to a position in the comp line
+    execlp(script.c_str(), script.c_str(), static_cast<char*>(nullptr));
+    _exit(127);
+  }
+
+  close(outputPipe[1]);
+  std::string output;
+  char buffer[256];
+  ssize_t count;
+  while ((count = read(outputPipe[0], buffer, sizeof(buffer))) > 0) {
+    output.append(buffer, static_cast<std::size_t>(count));
+  }
+  close(outputPipe[0]);
+  waitpid(child, nullptr, 0);
+
+  std::stringstream lines(output);
+  std::string line;
+  while (std::getline(lines, line)) {
+    if (!line.empty() && line.back() == '\r') line.pop_back();
+    if (!line.empty()) matches.push_back(line);
+  }
+  return matches;
+}
+
+char* scriptMatchGenerator(const char* text, int state) {
+  if (state == 0) scriptMatchIndex = 0;
+  while (scriptMatchIndex < scriptMatches.size()) {
+    const std::string& match = scriptMatches[scriptMatchIndex++];
+    if (match.compare(0, std::strlen(text), text) == 0) {
+      char* result = static_cast<char*>(std::malloc(match.size() + 1));
+      if (result != nullptr) std::strcpy(result, match.c_str());
+      return result;
+    }
+  }
+  return nullptr;
+}
 
 char* commandGenerator(const char* text, int state) {
   static std::vector<std::string> commands = {"cd", "echo", "exit", "pwd", "type"};
@@ -58,7 +114,16 @@ char* commandGenerator(const char* text, int state) {
 char** shellCompletion(const char* text, int start, int end) {
   (void)end;
   if (start != 0) {
-    return nullptr;
+    std::string line = rl_line_buffer ? rl_line_buffer : "";
+    std::stringstream beforeCursor(line.substr(0, static_cast<std::size_t>(start)));
+    std::string command;
+    beforeCursor >> command;
+    auto completer = completionCommands.find(command);
+    if (completer == completionCommands.end()) return nullptr;
+
+    scriptMatches = runCompleter(completer->second);
+    rl_attempted_completion_over = 1;
+    return rl_completion_matches(text, scriptMatchGenerator);
   }
   return rl_completion_matches(text, commandGenerator);
 }
@@ -281,7 +346,7 @@ int main() {
       if (words.size() >= 4 && words[1] == "-C") {
         completionCommands[words[3]] = words[2]; //store command + script
       } else if (words.size() >= 3 && words[1] == "-p") {
-        auto completion = completionCommands.find(words[2]);
+        auto completion = completionCommands.find(words[2]); //iterator with find algo
         if (completion != completionCommands.end()) { //if in the hashmap, script exists
           std::cout << "complete -C '" << completion->second << "' " << words[2] << std::endl; //print value found
         }else{
