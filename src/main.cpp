@@ -30,12 +30,12 @@ std::vector<std::string> runCompleter(const std::string& script) {
   }
   if (child == 0) {
     close(outputPipe[0]);
-    dup2(outputPipe[1], STDOUT_FILENO);
+    dup2(outputPipe[1], STDOUT_FILENO); //redirect child's stdout to parent
     close(outputPipe[1]);
     std::string point = std::to_string(rl_point);
     setenv("COMP_LINE", rl_line_buffer ? rl_line_buffer : "", 1); //set to full command line typed
     setenv("COMP_POINT", point.c_str(), 1); //set env to a position in the comp line
-    execlp(script.c_str(), script.c_str(), static_cast<char*>(nullptr));
+    execlp(script.c_str(), script.c_str(), static_cast<char*>(nullptr)); //run completer script
     _exit(127);
   }
 
@@ -45,7 +45,7 @@ std::vector<std::string> runCompleter(const std::string& script) {
   ssize_t count;
   while ((count = read(outputPipe[0], buffer, sizeof(buffer))) > 0) {
     output.append(buffer, static_cast<std::size_t>(count));
-  }
+  } //store child srdout in output string
   close(outputPipe[0]);
   waitpid(child, nullptr, 0);
 
